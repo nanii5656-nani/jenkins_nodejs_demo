@@ -1,0 +1,57 @@
+pipeline {
+  agent any
+
+  environment {
+    IMAGE_NAME = "jenkins-demo-app"
+    IMAGE_TAG  = "${env.BUILD_ID}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build - npm install') {
+      steps {
+        echo 'Installing dependencies...'
+        sh 'npm install'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        echo 'Running tests...'
+        sh 'npm test'
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        echo 'Building Docker image...'
+        sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+      }
+    }
+
+    stage('Deploy (run container)') {
+      steps {
+        echo 'Stopping previous container (if any) and running new...'
+        // attempt to stop and remove any existing container, then run new one on port 3000
+        sh """
+          docker rm -f ${IMAGE_NAME} || true
+          docker run -d --name ${IMAGE_NAME} -p 3000:3000 ${IMAGE_NAME}:${IMAGE_TAG}
+        """
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Pipeline succeeded - image: ${IMAGE_NAME}:${IMAGE_TAG}"
+    }
+    failure {
+      echo "Pipeline failed."
+    }
+  }
+}
