@@ -184,7 +184,7 @@ npm start
 
 2. In your repo → Settings → Webhooks → Add Webhook
 
-  * Payload URL: http://localhost:8080/github-webhook/
+  * Payload URL: http:// localhost:8080/github-webhook/
 
   * Content type: application/json
 
